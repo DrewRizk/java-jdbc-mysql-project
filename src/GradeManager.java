@@ -1361,25 +1361,8 @@ public class GradeManager {
             command = commandArguments.get(0);
             commandArguments.remove(0);
 
-            if (command.equals("help")) {
-                System.out.println("-".repeat(38) + "Help" + "-".repeat(38));
-                System.out.println("test connection \n\tTests the database connection");
-
-                System.out.println("list students \n\tlists all the students");
-                System.out.println("list classes \n\tlists all the classes");
-                System.out.println("list class_sections \n\tlists all the class_sections");
-                System.out.println("list class_registrations \n\tlists all the class_registrations");
-                System.out.println("list instructor <first_name> <last_name>\n\tlists all the classes taught by that instructor");
-
-
-                System.out.println("delete student <studentId> \n\tdeletes the student");
-                System.out.println("create student <first_name> <last_name> <birthdate> \n\tcreates a student");
-                System.out.println("register student <student_id> <class_section_id>\n\tregisters the student to the class section");
-
-                System.out.println("submit grade <studentId> <class_section_id> <letter_grade> \n\tcreates a student");
-                System.out.println("help \n\tlists help information");
-                System.out.println("quit \n\tExits the program");
-            } else if (command.equals("test") && commandArguments.get(0).equals("connection")) {
+            
+            if (command.equals("test") && commandArguments.get(0).equals("connection")) {
                 Database.testConnection();
                 
             } else if (command.equals("new-class")) {
@@ -1457,10 +1440,10 @@ public class GradeManager {
             	gradeAssignment(commandArguments.get(0), commandArguments.get(1), gradeFloat, currentActiveClass); //we pass in the current active class
             	
             	
-            } else if (command.equals("show-grades")) {
+            } else if (command.equals("student-grades")) {
             	showStudentGrades(commandArguments.get(0),currentActiveClass); //pass in username and current active class 
             	
-            } else if (command.equals("show-gradebook")) {
+            } else if (command.equals("gradebook")) {
             	showGradebook(currentActiveClass); //we pass in the current active class
        
             } else if (!(command.equals("quit") || command.equals("exit"))) {
@@ -1473,4 +1456,28 @@ public class GradeManager {
         } while (!(command.equals("quit") || command.equals("exit")));
         System.out.println("Bye!");
     }
+    
+    // select-class CS321 Sp20 1
+    // list-classes
+    // select-class CS410
+    // select-class MATH202
+    // select-class CS410 Sp20
+    // select-class CS410 Sp20 1 
+    // show-class
+    // show-categories
+    // add-category Participation .1
+    // show-categories
+    // show-assignment
+    // add-assignment "Homework 6" Homework "Another HW" 30
+    // show-assignment
+    // add-student arthur_putnam 8 "Arthur Putnam" 
+    // list-classes
+    // select-class MATH202
+    // add-student sayre_pet
+    // show-students
+    // show-students arth
+    // grade "Midterm Exam" "jane_smith" 40
+    // student-grades "jane_smith"
+    
+   
 }
