@@ -805,43 +805,43 @@ public class GradeManager {
         }
     }
     
-    private static void enrollStudentByUsername(String username, int classId) {
-        Connection connection = null;
-        PreparedStatement preparedStatement = null;
-
-        try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
-
-            // Prepare the SQL query to insert a new enrollment
-            String insertQuery = "INSERT INTO Enrollments (username, class_id) VALUES (?, ?)";
-            preparedStatement = connection.prepareStatement(insertQuery);
-            preparedStatement.setString(1, username);
-            preparedStatement.setInt(2, classId);
-
-            // Execute the insert query
-            int rowsAffected = preparedStatement.executeUpdate();
-
-            if (rowsAffected > 0) {
-                System.out.println("Student enrolled in class successfully");
-            } else {
-                System.out.println("Failed to enroll student in class");
-            }
-
-        } catch (SQLException sqlException) {
-            System.out.println("Failed to execute query");
-            System.out.println(sqlException.getMessage());
-
-        } finally {
-            try {
-                if (preparedStatement != null)
-                    preparedStatement.close();
-                if (connection != null)
-                    connection.close();
-            } catch (SQLException se) {
-                se.printStackTrace();
-            }
-        }
-    }
+//    private static void enrollStudentByUsername(String username, int classId) {
+//        Connection connection = null;
+//        PreparedStatement preparedStatement = null;
+//
+//        try {
+//            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+//
+//            // Prepare the SQL query to insert a new enrollment
+//            String insertQuery = "INSERT INTO Enrollments (username, class_id) VALUES (?, ?)";
+//            preparedStatement = connection.prepareStatement(insertQuery);
+//            preparedStatement.setString(1, username);
+//            preparedStatement.setInt(2, classId);
+//
+//            // Execute the insert query
+//            int rowsAffected = preparedStatement.executeUpdate();
+//
+//            if (rowsAffected > 0) {
+//                System.out.println("Student enrolled in class successfully");
+//            } else {
+//                System.out.println("Failed to enroll student in class");
+//            }
+//
+//        } catch (SQLException sqlException) {
+//            System.out.println("Failed to execute query");
+//            System.out.println(sqlException.getMessage());
+//
+//        } finally {
+//            try {
+//                if (preparedStatement != null)
+//                    preparedStatement.close();
+//                if (connection != null)
+//                    connection.close();
+//            } catch (SQLException se) {
+//                se.printStackTrace();
+//            }
+//        }
+//    }
     
     public static void addStudentByUsername(String username, int classId) {
         Connection connection = null;
@@ -881,55 +881,55 @@ public class GradeManager {
         }
     }
 
-    private static void enrollStudentInClassByUsername(int studentId, int classId) {
-        Connection connection = null;
-        PreparedStatement preparedStatement = null;
-
-        try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
-
-            // Check if the student is already enrolled in the class
-            String checkEnrollmentQuery = "SELECT * FROM Enrollments WHERE student_id = ? AND class_id = ?";
-            preparedStatement = connection.prepareStatement(checkEnrollmentQuery);
-            preparedStatement.setInt(1, studentId);
-            preparedStatement.setInt(2, classId);
-
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            if (!resultSet.next()) {
-                // If the student is not already enrolled, enroll them in the class
-                String insertEnrollmentQuery = "INSERT INTO Enrollments (student_id, class_id) VALUES (?, ?)";
-                preparedStatement = connection.prepareStatement(insertEnrollmentQuery);
-                preparedStatement.setInt(1, studentId);
-                preparedStatement.setInt(2, classId);
-
-                // Execute the insert query
-                int rowsAffected = preparedStatement.executeUpdate();
-
-                if (rowsAffected > 0) {
-                    System.out.println("Student enrolled in class successfully");
-                } else {
-                    System.out.println("Failed to enroll student in class");
-                }
-            } else {
-                System.out.println("Error: Student is already enrolled in the specified class");
-            }
-
-        } catch (SQLException sqlException) {
-            System.out.println("Failed to execute query");
-            System.out.println(sqlException.getMessage());
-
-        } finally {
-            try {
-                if (preparedStatement != null)
-                    preparedStatement.close();
-                if (connection != null)
-                    connection.close();
-            } catch (SQLException se) {
-                se.printStackTrace();
-            }
-        }
-    }
+//    private static void enrollStudentInClassByUsername(int studentId, int classId) {
+//        Connection connection = null;
+//        PreparedStatement preparedStatement = null;
+//
+//        try {
+//            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+//
+//            // Check if the student is already enrolled in the class
+//            String checkEnrollmentQuery = "SELECT * FROM Enrollments WHERE student_id = ? AND class_id = ?";
+//            preparedStatement = connection.prepareStatement(checkEnrollmentQuery);
+//            preparedStatement.setInt(1, studentId);
+//            preparedStatement.setInt(2, classId);
+//
+//            ResultSet resultSet = preparedStatement.executeQuery();
+//
+//            if (!resultSet.next()) {
+//                // If the student is not already enrolled, enroll them in the class
+//                String insertEnrollmentQuery = "INSERT INTO Enrollments (student_id, class_id) VALUES (?, ?)";
+//                preparedStatement = connection.prepareStatement(insertEnrollmentQuery);
+//                preparedStatement.setInt(1, studentId);
+//                preparedStatement.setInt(2, classId);
+//
+//                // Execute the insert query
+//                int rowsAffected = preparedStatement.executeUpdate();
+//
+//                if (rowsAffected > 0) {
+//                    System.out.println("Student enrolled in class successfully");
+//                } else {
+//                    System.out.println("Failed to enroll student in class");
+//                }
+//            } else {
+//                System.out.println("Error: Student is already enrolled in the specified class");
+//            }
+//
+//        } catch (SQLException sqlException) {
+//            System.out.println("Failed to execute query");
+//            System.out.println(sqlException.getMessage());
+//
+//        } finally {
+//            try {
+//                if (preparedStatement != null)
+//                    preparedStatement.close();
+//                if (connection != null)
+//                    connection.close();
+//            } catch (SQLException se) {
+//                se.printStackTrace();
+//            }
+//        }
+//    }
 
     public static void showStudentsInClass(int classId) {
         Connection connection = null;
@@ -1176,6 +1176,175 @@ public class GradeManager {
             }
         }
     }
+    
+    public static void showStudentGrades(String username, int classId) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+
+        try {
+            connection = Database.getDatabaseConnection();
+
+            // SQL query to retrieve student grades
+            String query = "SELECT s.username, s.name AS student_name, " +
+                           "c.name AS category_name, a.name AS assignment_name, " +
+                           "a.point_val AS assignment_points, COALESCE(g.score, 0) AS student_score, " +
+                           "COALESCE((g.score / a.point_val) * 100, 0) AS student_percentage " +
+                           "FROM Students s " +
+                           "JOIN Enrollments e ON s.student_id = e.student_id " +
+                           "JOIN Classes cl ON e.class_id = cl.class_id " +
+                           "JOIN Categories c ON cl.class_id = c.class_id " +
+                           "LEFT JOIN Assignments a ON c.category_id = a.category_id " +
+                           "LEFT JOIN Grades g ON s.student_id = g.student_id AND a.assignment_id = g.assignment_id " +
+                           "WHERE s.username = ? AND cl.class_id = ? " +
+                           "ORDER BY c.category_id, a.assignment_id";
+
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, username);
+            preparedStatement.setInt(2, classId);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            float categoryPercentage = 0;
+            float overallGrade = 0;
+            float overallGradeAttempted = 0;
+            int totalScoreAcrossAllCats = 0;
+            int totalAssignmentsPointsAcrossAllCats = 0;
+            
+            int totalScoreAcrossAllCatsAttempted = 0;
+            int totalAssignmentsPointsAcrossAllCatsAttempted = 0;
+            
+            
+            int totalScoreForCat = 0;
+            int assignmentPointsTotalForCat = 0;
+            String categoryName = null;
+            if (resultSet.next()) {
+            	   categoryName = resultSet.getString("category_name");
+            	   resultSet.previous(); //set resultSet back to where it was
+            }
+
+            while (resultSet.next()) {
+            	if (!categoryName.equals(resultSet.getString("category_name"))) {
+            		categoryPercentage = ((float) totalScoreForCat / assignmentPointsTotalForCat) * 100; // Update the category-wise total
+            		System.out.printf("Subtotal for Category %s: %d/%d %.2f%%\n", categoryName, totalScoreForCat, assignmentPointsTotalForCat, categoryPercentage);
+                    totalScoreForCat = 0;
+                    assignmentPointsTotalForCat = 0;
+            	}
+
+            	//populate fields
+                categoryName = resultSet.getString("category_name");
+                String assignmentName = resultSet.getString("assignment_name");
+                float studentPercentage = resultSet.getFloat("student_percentage");
+                int assignmentPoints = resultSet.getInt("assignment_points");
+                int studentScore = resultSet.getInt("student_score");
+           
+                
+                //update totals
+                totalScoreForCat += studentScore;
+                assignmentPointsTotalForCat += assignmentPoints;
+                
+                if (studentScore != 0) { //attempted grade 
+                	totalScoreAcrossAllCatsAttempted += studentScore;
+                	totalAssignmentsPointsAcrossAllCatsAttempted += assignmentPoints;
+                	
+                }
+                
+                totalScoreAcrossAllCats += studentScore;
+                totalAssignmentsPointsAcrossAllCats += assignmentPoints;
+                
+           
+                // Print grade
+                System.out.printf("Username: %s, Student Name: %s, Category: %s, Assignment Name: %s, Assignment Points: %d, Student Score: %d, Percentage: %.2f%%\n",
+                        username, resultSet.getString("student_name"), categoryName, assignmentName, assignmentPoints, studentScore, studentPercentage);
+
+
+            }
+
+            categoryPercentage = ((float) totalScoreForCat / assignmentPointsTotalForCat) * 100; // Update the category-wise total
+    		System.out.printf("Subtotal for Category %s: %d/%d %.2f%%\n", categoryName, totalScoreForCat, assignmentPointsTotalForCat, categoryPercentage);
+            
+            
+            overallGrade = ((float) totalScoreAcrossAllCats / totalAssignmentsPointsAcrossAllCats) * 100; // Update the category-wise total
+ 
+            // Calculate and display overall grade
+            System.out.printf("Total Overall Grade: %.2f%%\n", overallGrade);
+            
+            overallGradeAttempted = ((float) totalScoreAcrossAllCatsAttempted / totalAssignmentsPointsAcrossAllCatsAttempted) * 100; // Update the category-wise total
+            
+            // Calculate and display overall grade
+            System.out.printf("Attempted Overall Grade: %.2f%%\n", overallGradeAttempted);
+
+        } catch (SQLException sqlException) {
+            System.out.println("Failed to execute query");
+            System.out.println(sqlException.getMessage());
+            sqlException.printStackTrace();
+
+        } finally {
+            try {
+                if (preparedStatement != null)
+                    preparedStatement.close();
+                if (connection != null)
+                    connection.close();
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
+        }
+    }
+    
+    
+    public static void showGradebook(int classId) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+
+        try {
+            connection = Database.getDatabaseConnection(); // Replace with your method to get a database connection
+
+            // SQL query to retrieve gradebook
+            String query = "SELECT s.username, s.student_id, s.name AS student_name, " +
+                           "COALESCE(SUM(COALESCE(g.score, 0)), 0) AS total_score, " +
+                           "COALESCE(SUM(a.point_val), 0) AS total_points, " +
+                           "COALESCE((SUM(COALESCE(g.score, 0)) / SUM(a.point_val)) * 100, 0) AS overall_percentage " +
+                           "FROM Students s " +
+                           "JOIN Enrollments e ON s.student_id = e.student_id " +
+                           "JOIN Classes cl ON e.class_id = cl.class_id " +
+                           "LEFT JOIN Categories c ON cl.class_id = c.class_id " +
+                           "LEFT JOIN Assignments a ON c.category_id = a.category_id " +
+                           "LEFT JOIN Grades g ON s.student_id = g.student_id AND a.assignment_id = g.assignment_id " +
+                           "WHERE cl.class_id = ? " +
+                           "GROUP BY s.username, s.student_id, s.name " +
+                           "ORDER BY s.username";
+
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setInt(1, classId);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            // Display gradebook
+            while (resultSet.next()) {
+                System.out.printf("Username: %s, Student ID: %d, Student Name: %s, Total Score: %d, Total Points: %d, Overall Percentage: %.2f%%\n",
+                        resultSet.getString("username"),
+                        resultSet.getInt("student_id"),
+                        resultSet.getString("student_name"),
+                        resultSet.getInt("total_score"),
+                        resultSet.getInt("total_points"),
+                        resultSet.getFloat("overall_percentage"));
+            }
+
+        } catch (SQLException sqlException) {
+            System.out.println("Failed to execute query");
+            System.out.println(sqlException.getMessage());
+
+        } finally {
+            try {
+                if (preparedStatement != null)
+                    preparedStatement.close();
+                if (connection != null)
+                    connection.close();
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
+        }
+    }
+
 
 
     public static void main(String[] args) {
@@ -1286,6 +1455,13 @@ public class GradeManager {
             	String gradeString = commandArguments.get(2);
             	float gradeFloat = Float.parseFloat(gradeString);
             	gradeAssignment(commandArguments.get(0), commandArguments.get(1), gradeFloat, currentActiveClass); //we pass in the current active class
+            	
+            	
+            } else if (command.equals("show-grades")) {
+            	showStudentGrades(commandArguments.get(0),currentActiveClass); //pass in username and current active class 
+            	
+            } else if (command.equals("show-gradebook")) {
+            	showGradebook(currentActiveClass); //we pass in the current active class
        
             } else if (!(command.equals("quit") || command.equals("exit"))) {
                 System.out.println(command);
