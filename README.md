@@ -20,5 +20,13 @@ Fall Semester, 2023
 
 ## General Reflection 
 
+Took is forever to connect to database. Needed to perform the port forwarding.
+
+    public static void selectClass(String courseNum) {
+ was hard to order terms 
+
  
+
+
+
 

@@ -6,17 +6,23 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * This application will keep track of things like what classes are offered by
- * the school, and which students are registered for those classes and provide
- * basic reporting. This application interacts with a database to store and
- * retrieve data.
+ * This classes represents a grade manager system, where things such as students, classes, and grades exist.
+ * It is a dynamic system, so more students and classes can be added at any time. Finally, a students grades can
+ * be analyzed and a gradebook can be looked at for a certain class. An important note is that most the queries deal
+ * with a concept called the 'current active class' which is essentally just a reference to the most recent class returned 
+ * by a 'select-class' query. Further, for the majority of the queries to work, we have to make sure we select a class first. 
+ * It should be inferred that all of these methods are able to throw SQLExceptions if the query goes wrong.
  */
 public class GradeManager {
 	
 	
 	public static int currentActiveClass  = -1;
 
-   
+    /**
+     * Parses arguments up from the command line and returns them as a list.
+     * @param command gets added tk list
+     * @return the list of command line arguments.
+     */
     public static List<String> parseArguments(String command) {
         List<String> commandArguments = new ArrayList<String>();
         Matcher m = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(command);
@@ -24,7 +30,14 @@ public class GradeManager {
         return commandArguments;
     }
     
-    // Create a class: new-class CS410 Sp20 1 "Databases"
+
+    /**
+     * Creates a new class. 
+     * @param courseNum course number of the class
+     * @param term term of the class
+     * @param sectionNum section number of the class
+     * @param description description of the class
+     */
     public static void createNewClass(String courseNum, String term, int sectionNum, String description) {
         Connection connection = null;
         Statement sqlStatement = null;
@@ -33,12 +46,10 @@ public class GradeManager {
             connection = Database.getDatabaseConnection();
             sqlStatement = connection.createStatement();
 
-            // Create the SQL query for inserting a new class
             String insertQuery = String.format(
                     "INSERT INTO Classes (course_num, term, section_num, description) VALUES ('%s', '%s', %d, '%s')",
                     courseNum, term, sectionNum, description);
 
-            // Execute the query
             sqlStatement.executeUpdate(insertQuery);
             
             System.out.println(String.format("Class with course number: %s was created", courseNum));
@@ -64,6 +75,9 @@ public class GradeManager {
         }
     }
     
+    /**
+     * Lists all the classes with the number of students in each classs.
+     */
     public static void listClassesWithStudents() {
         Connection connection = null;
         Statement sqlStatement = null;
@@ -85,7 +99,6 @@ public class GradeManager {
 
             ResultSet resultSet = sqlStatement.executeQuery(query);
 
-            // Print the result set
             while (resultSet.next()) {
                 System.out.println("Class ID: " + resultSet.getInt("class_id"));
                 System.out.println("Course Number: " + resultSet.getString("course_num"));
@@ -115,15 +128,19 @@ public class GradeManager {
         }
     }
     
+    /**
+     * Selects a class from most recent term given a course number. If there are multiple, 
+     * it prints there was an error as there are multiple classes with that course number.
+     * @param courseNum course number of the class
+     */
     public static void selectClass(String courseNum) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection(); 
 
-            // Prepare the SQL query
             String query = "SELECT class_id, term, section_num " +
                            "FROM Classes " +
                            "WHERE course_num = ? " +
@@ -138,21 +155,19 @@ public class GradeManager {
             preparedStatement = connection.prepareStatement(query);
             preparedStatement.setString(1, courseNum);
 
-            // Execute the query
             resultSet = preparedStatement.executeQuery();
           
 
             // Process the result set
             if (resultSet.next()) {
-            
-            	  
+
             	//multiple results 
                 if (resultSet.next()) {
                     System.out.println("Error: Multiple sections found for course number " + courseNum + " in the most recent term.");
 
                 //one result
                 }else {
-                	resultSet.previous(); //move it back to first class
+                	resultSet.previous(); //move resultSet back to first class
             	
             	   int classId = resultSet.getInt("class_id");
                    String term = resultSet.getString("term");
@@ -164,8 +179,7 @@ public class GradeManager {
                    System.out.println("Term: " + term);
                    System.out.println("Section Number: " + sectionNum);
                    
-                   currentActiveClass = classId;
-                	
+                   currentActiveClass = classId; //update current active class
                 }
 
               
@@ -192,15 +206,21 @@ public class GradeManager {
         }
     }
     
+       
+    /**
+     * Selects the most recent class up to the given given term, uses the given course number to do so. If there are multiple, 
+     * it prints there was an error as there are multiple classes with that course number.
+     * @param courseNum course number of the class
+     * @param targetTerm term to go up to
+     */
     public static void selectClassByTerm(String courseNum, String targetTerm) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection(); 
 
-            // Prepare the SQL query
             String query = "SELECT class_id, term, section_num " +
                            "FROM Classes " +
                            "WHERE course_num = ? AND term <= ? " +
@@ -217,10 +237,8 @@ public class GradeManager {
             preparedStatement.setString(1, courseNum);
             preparedStatement.setString(2, targetTerm);
 
-            // Execute the query
             resultSet = preparedStatement.executeQuery();
 
-            // Process the result set
             if (resultSet.next()) {
                 int classId = resultSet.getInt("class_id");
                 String term = resultSet.getString("term");
@@ -234,7 +252,7 @@ public class GradeManager {
                     System.out.println("Term: " + term);
                     System.out.println("Section Number: " + sectionNum);
                     
-                    currentActiveClass = classId;
+                    currentActiveClass = classId; //update current active class
                 } else {
                     // Multiple classes found for the specified course and term
                     System.out.println("Error: Multiple classes found for course " + courseNum + " up to term " + targetTerm + ".");
@@ -263,15 +281,21 @@ public class GradeManager {
     }
     
     
+    /**
+     * Selects the class given a course number, term, and a section number.
+     * Shouldn't be any duplicates in this method.
+     * @param courseNum the course number for the class
+     * @param targetTerm the term for the class
+     * @param sectionNum the section number for the class
+     */
     public static void selectClassByTermAndSection(String courseNum, String targetTerm, int sectionNum) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection();
 
-            // Prepare the SQL query
             String query = "SELECT class_id, term, section_num " +
                            "FROM Classes " +
                            "WHERE course_num = ? AND term = ? AND section_num = ?";
@@ -281,10 +305,8 @@ public class GradeManager {
             preparedStatement.setString(2, targetTerm);
             preparedStatement.setInt(3, sectionNum);
 
-            // Execute the query
             resultSet = preparedStatement.executeQuery();
 
-            // Process the result set
             if (resultSet.next()) {
                 int classId = resultSet.getInt("class_id");
                 String term = resultSet.getString("term");
@@ -321,15 +343,18 @@ public class GradeManager {
         }
     }
     
+    /**
+     * Selects the current active class if it has been set.
+     * @param classId
+     */
     public static void selectCurrentActiveClass(int classId) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection();
 
-            // Prepare the SQL query
             String query = "SELECT * " +
                            "FROM Classes " +
                            "WHERE class_id = ?";
@@ -337,10 +362,8 @@ public class GradeManager {
             preparedStatement = connection.prepareStatement(query);
             preparedStatement.setInt(1, classId);
 
-            // Execute the query
             resultSet = preparedStatement.executeQuery();
 
-            // Process the result set
             if (resultSet.next()) {
                 String courseNum = resultSet.getString("course_num");
                 String term = resultSet.getString("term");
@@ -377,15 +400,18 @@ public class GradeManager {
     }
     
     
+    /**
+     * Shows the categories that exist for the current active class.
+     * @param classId the given class_id from current active class that will uniquely identify a class
+     */
     public static void showCategoriesForActiveClass(int classId) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection();
 
-            // Prepare the SQL query
             String query = "SELECT category_id, class_id, name, weight " +
                            "FROM Categories " +
                            "WHERE class_id = ?";
@@ -393,10 +419,8 @@ public class GradeManager {
             preparedStatement = connection.prepareStatement(query);
             preparedStatement.setInt(1, classId);
 
-            // Execute the query
             resultSet = preparedStatement.executeQuery();
 
-            // Process the result set
             while (resultSet.next()) {
                 int categoryId = resultSet.getInt("category_id");
                 int retrievedClassId = resultSet.getInt("class_id");
@@ -428,14 +452,19 @@ public class GradeManager {
         }
     }
     
+    /**
+     * Adds a category to the current active class.
+     * @param class_id the class_id for the current active class
+     * @param categoryName name of the category
+     * @param weight the weight of the category
+     */
     public static void addCategory(int class_id, String categoryName, float weight) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection(); 
 
-            // Prepare the SQL query
             String query = "INSERT INTO Categories (class_id, name, weight) VALUES (?, ?, ?)";
 
             preparedStatement = connection.prepareStatement(query);
@@ -443,7 +472,8 @@ public class GradeManager {
             preparedStatement.setInt(1, class_id);
             preparedStatement.setString(2, categoryName);
             preparedStatement.setFloat(3, weight);
-            // Execute the query
+
+            // Keep track of the affected rows to help determine success
             int rowsAffected = preparedStatement.executeUpdate();
 
             if (rowsAffected > 0) {
@@ -468,16 +498,18 @@ public class GradeManager {
         }
     }
     
-    
+    /**
+     * Shows the assignments for the current active class.
+     * @param classId the class_id of the current active class
+     */
     public static void showAssignmentsForClass(int classId) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection();
 
-            // Prepare the SQL query
             String query = "SELECT c.name AS category_name, a.name AS assignment_name, a.point_val " +
                            "FROM Assignments a " +
                            "JOIN Categories c ON a.category_id = c.category_id " +
@@ -487,10 +519,8 @@ public class GradeManager {
             preparedStatement = connection.prepareStatement(query);
             preparedStatement.setInt(1, classId);
 
-            // Execute the query
             resultSet = preparedStatement.executeQuery();
 
-            // Process the result set
             String currentCategory = null;
 
             while (resultSet.next()) {
@@ -527,15 +557,22 @@ public class GradeManager {
         }
     }
     
-    
+    /**
+     * Add an assignment to the current active class.
+     * @param assignmentName the name of the assignment
+     * @param categoryName the name of the category
+     * @param description the description of the assignment
+     * @param points how many points the assignment is worth
+     * @param classId the class_id of the current active class
+     */
     public static void addAssignment(String assignmentName, String categoryName, String description, int points, int classId) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection();
 
-            // Prepare the SQL query to retrieve category_id based on the provided category name and class_id
+            // Query to retrieve category_id based on the given category name and class_id
             String categoryIdQuery = "SELECT category_id FROM Categories WHERE name = ? AND class_id = ?";
             preparedStatement = connection.prepareStatement(categoryIdQuery);
             preparedStatement.setString(1, categoryName);
@@ -546,7 +583,7 @@ public class GradeManager {
                 if (resultSet.next()) {
                     categoryId = resultSet.getInt("category_id");
 
-                    // Prepare the SQL query to insert the new assignment
+                    // Insert new assignment query
                     String insertQuery = "INSERT INTO Assignments (category_id, name, description, point_val) VALUES (?, ?, ?, ?)";
                     preparedStatement = connection.prepareStatement(insertQuery);
                     preparedStatement.setInt(1, categoryId);
@@ -554,7 +591,7 @@ public class GradeManager {
                     preparedStatement.setString(3, description);
                     preparedStatement.setInt(4, points);
 
-                    // Execute the query
+                    // Keep track of affected rows
                     int rowsAffected = preparedStatement.executeUpdate();
 
                     if (rowsAffected > 0) {
@@ -584,13 +621,17 @@ public class GradeManager {
     }
     
 
-    
+    /**
+     * Updates a student's name.
+     * @param username the username of the student
+     * @param newName the new name of the student
+     */
     public static void updateStudentName(String username, String newName) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection();
 
             // Check if the student already exists
             String checkStudentQuery = "SELECT * FROM Students WHERE username = ?";
@@ -600,9 +641,9 @@ public class GradeManager {
             ResultSet resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
-                // If the student exists, update the name
+                // If the student exists we update their name
                 int studentId = resultSet.getInt("student_id");
-                updateStudentNameById(studentId, newName);
+                updateStudentNameById(studentId, newName); //helper method
                 System.out.println("Student name updated successfully");
             } else {
                 System.out.println("Error: Student not found with username " + username);
@@ -624,20 +665,24 @@ public class GradeManager {
         }
     }
     
+    /**
+     * Uses a student's ID to update their name.
+     * @param studentId the student's student_id
+     * @param newName their new name
+     */
     private static void updateStudentNameById(int studentId, String newName) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection();
 
-            // Prepare the SQL query to update the student's name
             String updateQuery = "UPDATE Students SET name = ? WHERE student_id = ?";
             preparedStatement = connection.prepareStatement(updateQuery);
             preparedStatement.setString(1, newName);
             preparedStatement.setInt(2, studentId);
 
-            // Execute the update query
+            // Keep track of rows affected
             int rowsAffected = preparedStatement.executeUpdate();
 
             if (rowsAffected > 0) {
@@ -662,14 +707,19 @@ public class GradeManager {
         }
     }
 
+    /**
+     * Insert a new student.
+     * @param username the username of the new student
+     * @param name the name of the new student
+     */
     public static void insertNewStudent(String username, String name) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection();
 
-            // Check if the student already exists
+            // Check if the student exists
             String checkStudentQuery = "SELECT * FROM Students WHERE username = ?";
             preparedStatement = connection.prepareStatement(checkStudentQuery);
             preparedStatement.setString(1, username);
@@ -679,13 +729,13 @@ public class GradeManager {
             if (resultSet.next()) {
                 System.out.println("Error: Student already exists with username " + username);
             } else {
-                // If the student does not exist, insert a new student
+                // If the student doesn't exist, insert the new student
                 String insertQuery = "INSERT INTO Students (username, name) VALUES (?, ?)";
                 preparedStatement = connection.prepareStatement(insertQuery);
                 preparedStatement.setString(1, username);
                 preparedStatement.setString(2, name);
 
-                // Execute the insert query
+                // Keep track of rows affected
                 int rowsAffected = preparedStatement.executeUpdate();
 
                 if (rowsAffected > 0) {
@@ -711,14 +761,21 @@ public class GradeManager {
         }
     }
     
+    /**
+     * Adds a student to the current active class.
+     * @param username the username of the student
+     * @param studentId the student's ID
+     * @param name the name of the student
+     * @param classId the class_id of the current active class
+     */
     public static void addStudent(String username, int studentId, String name, int classId) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection(); 
 
-            // Check if the student already exists
+            // Check if the student exists
             String checkStudentQuery = "SELECT * FROM Students WHERE username = ?";
             preparedStatement = connection.prepareStatement(checkStudentQuery);
             preparedStatement.setString(1, username);
@@ -726,26 +783,26 @@ public class GradeManager {
             ResultSet resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
-                // If the student exists, update the name and enroll in the class
+                // If student exists, update their name, then enroll them in class
                 int existingStudentId = resultSet.getInt("student_id");
                 String existingName = resultSet.getString("name");
 
-                // If the provided student_id matches, enroll them in the class
+                // If student_id matches, enroll them 
                 if (existingStudentId == studentId) {
                     enrollStudentInClass(existingStudentId, classId);
                 } else {
-                    // If the provided name matches the stored name, enroll them in the class
+                    // If name matches, enroll them in the class
                     if (existingName.equals(name)) {
                         enrollStudentInClass(existingStudentId, classId);
                     } else {
-                        // If the provided name does not match the stored name, update the name
+                        // If name doesn't match, update the name
                         updateStudentNameById(existingStudentId, name);
                         System.out.println("Warning: Name updated for existing student with username " + username);
                         enrollStudentInClass(existingStudentId, classId);
                     }
                 }
             } else {
-                // If the student does not exist, insert a new student and enroll them in the class
+                // If student doesn't exist, insert a new student, then enroll them
                 insertNewStudent(username, name);
                 enrollStudentInClass(studentId, classId);
             }
@@ -766,21 +823,24 @@ public class GradeManager {
         }
     }
 
-    
+    /**
+     * Enrolls a student in the current active class.
+     * @param studentId the id of the student 
+     * @param classId the class_id of the current active class
+     */
     private static void enrollStudentInClass(int studentId, int classId) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection(); 
 
-            // Prepare the SQL query to insert a new enrollment
             String insertQuery = "INSERT INTO Enrollments (student_id, class_id) VALUES (?, ?)";
             preparedStatement = connection.prepareStatement(insertQuery);
             preparedStatement.setInt(1, studentId);
             preparedStatement.setInt(2, classId);
 
-            // Execute the insert query
+            // Keep track of rows affected
             int rowsAffected = preparedStatement.executeUpdate();
 
             if (rowsAffected > 0) {
@@ -805,52 +865,19 @@ public class GradeManager {
         }
     }
     
-//    private static void enrollStudentByUsername(String username, int classId) {
-//        Connection connection = null;
-//        PreparedStatement preparedStatement = null;
-//
-//        try {
-//            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
-//
-//            // Prepare the SQL query to insert a new enrollment
-//            String insertQuery = "INSERT INTO Enrollments (username, class_id) VALUES (?, ?)";
-//            preparedStatement = connection.prepareStatement(insertQuery);
-//            preparedStatement.setString(1, username);
-//            preparedStatement.setInt(2, classId);
-//
-//            // Execute the insert query
-//            int rowsAffected = preparedStatement.executeUpdate();
-//
-//            if (rowsAffected > 0) {
-//                System.out.println("Student enrolled in class successfully");
-//            } else {
-//                System.out.println("Failed to enroll student in class");
-//            }
-//
-//        } catch (SQLException sqlException) {
-//            System.out.println("Failed to execute query");
-//            System.out.println(sqlException.getMessage());
-//
-//        } finally {
-//            try {
-//                if (preparedStatement != null)
-//                    preparedStatement.close();
-//                if (connection != null)
-//                    connection.close();
-//            } catch (SQLException se) {
-//                se.printStackTrace();
-//            }
-//        }
-//    }
-    
+    /**
+     * Adds a student to current active class by their username.
+     * @param username the username of the student
+     * @param classId the class_id of the current active class
+     */
     public static void addStudentByUsername(String username, int classId) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection();
 
-            // Check if the student already exists
+            // Check if student exists
             String checkStudentQuery = "SELECT * FROM Students WHERE username = ?";
             preparedStatement = connection.prepareStatement(checkStudentQuery);
             preparedStatement.setString(1, username);
@@ -858,7 +885,7 @@ public class GradeManager {
             ResultSet resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
-                // If the student exists, enroll them in the class
+                // If student exists, enroll them
                 int studentId = resultSet.getInt("student_id");
                 enrollStudentInClass(studentId, classId);
             } else {
@@ -881,64 +908,17 @@ public class GradeManager {
         }
     }
 
-//    private static void enrollStudentInClassByUsername(int studentId, int classId) {
-//        Connection connection = null;
-//        PreparedStatement preparedStatement = null;
-//
-//        try {
-//            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
-//
-//            // Check if the student is already enrolled in the class
-//            String checkEnrollmentQuery = "SELECT * FROM Enrollments WHERE student_id = ? AND class_id = ?";
-//            preparedStatement = connection.prepareStatement(checkEnrollmentQuery);
-//            preparedStatement.setInt(1, studentId);
-//            preparedStatement.setInt(2, classId);
-//
-//            ResultSet resultSet = preparedStatement.executeQuery();
-//
-//            if (!resultSet.next()) {
-//                // If the student is not already enrolled, enroll them in the class
-//                String insertEnrollmentQuery = "INSERT INTO Enrollments (student_id, class_id) VALUES (?, ?)";
-//                preparedStatement = connection.prepareStatement(insertEnrollmentQuery);
-//                preparedStatement.setInt(1, studentId);
-//                preparedStatement.setInt(2, classId);
-//
-//                // Execute the insert query
-//                int rowsAffected = preparedStatement.executeUpdate();
-//
-//                if (rowsAffected > 0) {
-//                    System.out.println("Student enrolled in class successfully");
-//                } else {
-//                    System.out.println("Failed to enroll student in class");
-//                }
-//            } else {
-//                System.out.println("Error: Student is already enrolled in the specified class");
-//            }
-//
-//        } catch (SQLException sqlException) {
-//            System.out.println("Failed to execute query");
-//            System.out.println(sqlException.getMessage());
-//
-//        } finally {
-//            try {
-//                if (preparedStatement != null)
-//                    preparedStatement.close();
-//                if (connection != null)
-//                    connection.close();
-//            } catch (SQLException se) {
-//                se.printStackTrace();
-//            }
-//        }
-//    }
-
+    /**
+     * Shows the students enrolled in the current active class.
+     * @param classId the class_id of the current active class
+     */
     public static void showStudentsInClass(int classId) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection(); 
 
-            // Query to retrieve all students in the current class
             String query = "SELECT s.username, s.name FROM Students s " +
                            "JOIN Enrollments e ON s.student_id = e.student_id " +
                            "WHERE e.class_id = ?";
@@ -947,8 +927,7 @@ public class GradeManager {
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            // Display the students
-            System.out.println("Students in Class " + classId + ":");
+            System.out.println("Students in the Class " + classId + ":");
             while (resultSet.next()) {
                 String username = resultSet.getString("username");
                 String name = resultSet.getString("name");
@@ -971,13 +950,17 @@ public class GradeManager {
         }
     }
     
-    
+    /**
+     * Shows the students in the current active class with the given string in their name.
+     * @param searchString the string to look for
+     * @param classId the class_id of the current active class
+     */
     public static void showStudentsWithStringInClass(String searchString, int classId) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection();
 
             String query = "SELECT s.username, s.name FROM Students s " +
                            "JOIN Enrollments e ON s.student_id = e.student_id " +
@@ -989,8 +972,7 @@ public class GradeManager {
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            // Display the students
-            System.out.println("Students with '" + searchString + "' in their name or their username in Class " + classId + ":");
+            System.out.println("Students with '" + searchString + "' in their name or username in the Class " + classId + ":");
             while (resultSet.next()) {
                 String username = resultSet.getString("username");
                 String name = resultSet.getString("name");
@@ -1013,14 +995,21 @@ public class GradeManager {
         }
     }
     
+    /**
+     * Grade an assignment.
+     * @param assignmentName the name of the assignment
+     * @param username the username of the student
+     * @param grade the grade they will get
+     * @param classId the class_id for the current active class
+     */
     public static void gradeAssignment(String assignmentName, String username, float grade, int classId) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection();
 
-            // Check if the assignment exists and get its maximum point value
+            // Check if assignment exists
             String assignmentQuery = "SELECT a.assignment_id, a.point_val FROM Assignments a " +
                                      "JOIN Categories c ON a.category_id = c.category_id " +
                                      "JOIN Classes cl ON c.class_id = cl.class_id " +
@@ -1035,7 +1024,7 @@ public class GradeManager {
                 int assignmentId = assignmentResultSet.getInt("assignment_id");
                 float maxPoints = assignmentResultSet.getFloat("point_val");
 
-                // Check if the student exists
+                // Check student exists
                 String studentQuery = "SELECT student_id FROM Students WHERE username = ?";
                 preparedStatement = connection.prepareStatement(studentQuery);
                 preparedStatement.setString(1, username);
@@ -1045,7 +1034,7 @@ public class GradeManager {
                 if (studentResultSet.next()) {
                     int studentId = studentResultSet.getInt("student_id");
 
-                    // Check if the student already has a grade for the assignment
+                    // Does student have a grade for assignment
                     String existingGradeQuery = "SELECT * FROM Grades WHERE student_id = ? AND assignment_id = ?";
                     preparedStatement = connection.prepareStatement(existingGradeQuery);
                     preparedStatement.setInt(1, studentId);
@@ -1054,17 +1043,17 @@ public class GradeManager {
                     ResultSet existingGradeResultSet = preparedStatement.executeQuery();
 
                     if (existingGradeResultSet.next()) {
-                        // If the student already has a grade, update it
+                        // Update the grade
                         updateGrade(studentId, assignmentId, grade, maxPoints);
                     } else {
-                        // If the student does not have a grade, insert a new grade
+                        // Insert a grade
                         insertGrade(studentId, assignmentId, grade, maxPoints);
                     }
                 } else {
-                    System.out.println("Error: Student not found with username " + username);
+                    System.out.println("Error: Student not found having the username " + username);
                 }
             } else {
-                System.out.println("Error: Assignment not found with name " + assignmentName + " in Class " + classId);
+                System.out.println("Error: Assignment not found having the name " + assignmentName + " in the Class " + classId);
             }
 
         } catch (SQLException sqlException) {
@@ -1083,18 +1072,25 @@ public class GradeManager {
         }
     }
 
+    /**
+     * Updates a grade for a student.
+     * @param studentId the student_id of the student
+     * @param assignmentId the assignment_id of the assignment
+     * @param grade the updated grade for the assignment
+     * @param maxPoints max amount of points for the assignment
+     */
     private static void updateGrade(int studentId, int assignmentId, float grade, float maxPoints) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection();
 
-            // Update the existing grade for the student and assignment
+            // Update the existing grade
             String updateGradeQuery = "UPDATE Grades SET score = ? WHERE student_id = ? AND assignment_id = ?";
             preparedStatement = connection.prepareStatement(updateGradeQuery);
             
-            // If the grade exceeds the maximum points, print a warning
+            // Grade can't be larger than the maximum
             if (grade > maxPoints) {
                 System.out.println("Warning: Grade exceeds maximum points (" + maxPoints + ")");
                 preparedStatement.setFloat(1, maxPoints);
@@ -1105,7 +1101,7 @@ public class GradeManager {
             preparedStatement.setInt(2, studentId);
             preparedStatement.setInt(3, assignmentId);
 
-            // Execute the update query
+            // Keep track of the affected rows
             int rowsAffected = preparedStatement.executeUpdate();
 
             if (rowsAffected > 0) {
@@ -1130,18 +1126,24 @@ public class GradeManager {
         }
     }
 
+    /**
+     * Inserts a new grade.
+     * @param studentId the student_id of the student
+     * @param assignmentId the assignment_id of the assignment
+     * @param grade the new grade for the assignment
+     * @param maxPoints max amount of points for the assignment
+     */
     private static void insertGrade(int studentId, int assignmentId, float grade, float maxPoints) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Use your method to get a database connection
+            connection = Database.getDatabaseConnection(); 
 
-            // Insert a new grade for the student and assignment
             String insertGradeQuery = "INSERT INTO Grades (student_id, assignment_id, score) VALUES (?, ?, ?)";
             preparedStatement = connection.prepareStatement(insertGradeQuery);
             
-            // If the grade exceeds the maximum points, print a warning
+            // New grade can't be larger than maxPoints
             if (grade > maxPoints) {
                 System.out.println("Warning: Grade exceeds maximum points (" + maxPoints + ")");
                 preparedStatement.setFloat(3, maxPoints);
@@ -1152,7 +1154,7 @@ public class GradeManager {
             preparedStatement.setInt(1, studentId);
             preparedStatement.setInt(2, assignmentId);
 
-            // Execute the insert query
+            // Keep track of the rows affected
             int rowsAffected = preparedStatement.executeUpdate();
 
             if (rowsAffected > 0) {
@@ -1177,6 +1179,11 @@ public class GradeManager {
         }
     }
     
+    /**
+     * Shows the grades for a student with various other info like subtotal for each category, and overall grade, both total and attempted.
+     * @param username the username of the student
+     * @param classId the class_id of the current active class
+     */
     public static void showStudentGrades(String username, int classId) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
@@ -1184,7 +1191,6 @@ public class GradeManager {
         try {
             connection = Database.getDatabaseConnection();
 
-            // SQL query to retrieve student grades
             String query = "SELECT s.username, s.name AS student_name, " +
                            "c.name AS category_name, a.name AS assignment_name, " +
                            "a.point_val AS assignment_points, COALESCE(g.score, 0) AS student_score, " +
@@ -1212,8 +1218,7 @@ public class GradeManager {
             
             int totalScoreAcrossAllCatsAttempted = 0;
             int totalAssignmentsPointsAcrossAllCatsAttempted = 0;
-            
-            
+
             int totalScoreForCat = 0;
             int assignmentPointsTotalForCat = 0;
             String categoryName = null;
@@ -1237,7 +1242,6 @@ public class GradeManager {
                 int assignmentPoints = resultSet.getInt("assignment_points");
                 int studentScore = resultSet.getInt("student_score");
            
-                
                 //update totals
                 totalScoreForCat += studentScore;
                 assignmentPointsTotalForCat += assignmentPoints;
@@ -1245,32 +1249,25 @@ public class GradeManager {
                 if (studentScore != 0) { //attempted grade 
                 	totalScoreAcrossAllCatsAttempted += studentScore;
                 	totalAssignmentsPointsAcrossAllCatsAttempted += assignmentPoints;
-                	
                 }
-                
                 totalScoreAcrossAllCats += studentScore;
                 totalAssignmentsPointsAcrossAllCats += assignmentPoints;
-                
            
                 // Print grade
                 System.out.printf("Username: %s, Student Name: %s, Category: %s, Assignment Name: %s, Assignment Points: %d, Student Score: %d, Percentage: %.2f%%\n",
                         username, resultSet.getString("student_name"), categoryName, assignmentName, assignmentPoints, studentScore, studentPercentage);
-
-
             }
-
-            categoryPercentage = ((float) totalScoreForCat / assignmentPointsTotalForCat) * 100; // Update the category-wise total
+            categoryPercentage = ((float) totalScoreForCat / assignmentPointsTotalForCat) * 100; 
     		System.out.printf("Subtotal for Category %s: %d/%d %.2f%%\n", categoryName, totalScoreForCat, assignmentPointsTotalForCat, categoryPercentage);
             
-            
-            overallGrade = ((float) totalScoreAcrossAllCats / totalAssignmentsPointsAcrossAllCats) * 100; // Update the category-wise total
+            overallGrade = ((float) totalScoreAcrossAllCats / totalAssignmentsPointsAcrossAllCats) * 100; 
  
-            // Calculate and display overall grade
+            // Display totoal overall grade
             System.out.printf("Total Overall Grade: %.2f%%\n", overallGrade);
             
-            overallGradeAttempted = ((float) totalScoreAcrossAllCatsAttempted / totalAssignmentsPointsAcrossAllCatsAttempted) * 100; // Update the category-wise total
+            overallGradeAttempted = ((float) totalScoreAcrossAllCatsAttempted / totalAssignmentsPointsAcrossAllCatsAttempted) * 100; 
             
-            // Calculate and display overall grade
+            // Display attempted overall grade
             System.out.printf("Attempted Overall Grade: %.2f%%\n", overallGradeAttempted);
 
         } catch (SQLException sqlException) {
@@ -1290,15 +1287,17 @@ public class GradeManager {
         }
     }
     
-    
+    /**
+     * Shows the current gradebook for the current active class.
+     * @param classId the class_id of the current active class.
+     */
     public static void showGradebook(int classId) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
 
         try {
-            connection = Database.getDatabaseConnection(); // Replace with your method to get a database connection
+            connection = Database.getDatabaseConnection();
 
-            // SQL query to retrieve gradebook
             String query = "SELECT s.username, s.student_id, s.name AS student_name, " +
                            "COALESCE(SUM(COALESCE(g.score, 0)), 0) AS total_score, " +
                            "COALESCE(SUM(a.point_val), 0) AS total_points, " +
@@ -1318,7 +1317,6 @@ public class GradeManager {
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            // Display gradebook
             while (resultSet.next()) {
                 System.out.printf("Username: %s, Student ID: %d, Student Name: %s, Total Score: %d, Total Points: %d, Overall Percentage: %.2f%%\n",
                         resultSet.getString("username"),
@@ -1345,8 +1343,11 @@ public class GradeManager {
         }
     }
 
-
-
+    /**
+     * Main method that runs the console app. Takes in command line arguments from the user to determine what they want
+     * to do with the grade manager system.
+     * @param args the command line arguments
+     */
     public static void main(String[] args) {
         System.out.println("Welcome to the School Management System");
         System.out.println("-".repeat(80));

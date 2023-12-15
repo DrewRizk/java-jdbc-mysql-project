@@ -1,28 +1,14 @@
 import java.sql.*;
 
-
 /**
  * The Database class contains helper functions to connect and test your
- * connection with the database.
+ * connection with the database. Alot of this code we reused from our 310 final project.
  */
 public class Database {
 
     /**
-     * Creates a connection to the database using environment variables. The following environment
-     * variables must be set prior to running your program:
-     *
-     * <ul>
-     *    <li>CS310_PORT - The database management system port
-     *    <li>CS310_HOST - The database management system host
-     *    <li>CS310_USERNAME - The database management system username
-     *    <li>CS310_PASSWORD - The database management system user's password
-     *    <li>CS310_DATABASE - The name of the database in the database management system
-     * </ul>
-     *
-     * For more information on environment variables see:
-     * <a href="https://docs.oracle.com/javase/tutorial/essential/environment/env.html">
-     *  https://docs.oracle.com/javase/tutorial/essential/environment/env.html
-     * </a>
+     * Creates a connection to the database using environment variables. The environment
+     * variables must be set prior to running the program.
      * @return java.sql.Connection
      * @throws SQLException
      */
@@ -50,13 +36,10 @@ public class Database {
     }
 
     /**
-     * Tests the connection to your database. If your connection fails, please check:
-     * <ul>
-     *    <li>Database is running
-     *    <li>Environment variables are set and being read in properly
-     *    <li>Database Driver is in the CLASSPATH.
-     *    <li>SSH port forwarding is properly setup
-     * </ul>
+     * Tests the connection to your database. If your connection fails, throws an
+     * SQL exception.
+     * @throws SQLException
+     * 
      */
     public static void testConnection() {
         System.out.println("Attempting to connect to MySQL database using:");
