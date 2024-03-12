@@ -1,9 +1,4 @@
 
-# CS 410 Final Project 5
-
-* Author: Drew Rizk and Sayre Peterson
-* Class: CS410
-* Semester: Fall 2023
 
 ## Project Description
 A Java application for managing grades in a class from the command line. 
