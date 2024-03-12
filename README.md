@@ -3,12 +3,6 @@
 ## Project Description
 A Java application for managing grades in a class from the command line. 
 
-
-
-## Project semester and year
-
-Fall Semester, 2023
-
 ## Running the program
 (Exact steps you'd take to run the program on Onyx)
 
